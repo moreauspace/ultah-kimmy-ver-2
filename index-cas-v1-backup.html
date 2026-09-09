@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>K. — for Kimmy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #f2f2f2;
+    --grey: #9a9a9a;
+    --grey-dim: #5c5c5c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'EB Garamond', serif;
+    background: var(--black);
+    color: var(--white);
+    user-select: none;
+  }
+
+  #smoke, #fx, #grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #smoke { z-index: 0; }
+  #fx { z-index: 50; }
+  #grain { z-index: 60; opacity: .07; }
+  .vignette {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%);
+  }
+
+  .scene {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    opacity: 0; visibility: hidden;
+    transition: opacity 1.6s ease, visibility 1.6s;
+  }
+  .scene.active { opacity: 1; visibility: visible; }
+
+  .smallcaps {
+    font-size: 12px; letter-spacing: 7px; text-transform: uppercase; color: var(--grey);
+  }
+  .hint {
+    margin-top: 40px; font-size: 12px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--grey-dim); animation: pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .35; } 50% { opacity: .9; } }
+
+  /* ---------- Scene 1: title card ---------- */
+  .initial {
+    font-size: clamp(120px, 26vw, 230px); font-weight: 400; line-height: 1;
+    color: var(--white); letter-spacing: -4px;
+    text-shadow: 0 0 60px rgba(255,255,255,.14);
+  }
+  .song-sub { margin-top: 8px; font-size: clamp(18px, 3vw, 24px); font-style: italic; color: var(--grey); }
+  .band-line { margin-top: 26px; }
+
+  .play {
+    margin-top: 54px; width: 84px; height: 84px; border-radius: 50%;
+    border: 1px solid rgba(242,242,242,.55); background: transparent;
+    cursor: pointer; position: relative;
+    transition: transform .4s ease, box-shadow .4s ease, border-color .4s;
+  }
+  .play::before {
+    content: ''; position: absolute; top: 50%; left: 53%; translate: -50% -50%;
+    border-left: 22px solid var(--white);
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+  }
+  .play:hover { transform: scale(1.07); border-color: var(--white); box-shadow: 0 0 44px rgba(255,255,255,.12); }
+  .play::after {
+    content: ''; position: absolute; inset: -14px; border-radius: 50%;
+    border: 1px solid rgba(242,242,242,.14);
+    animation: ripple 2.8s ease-out infinite;
+  }
+  @keyframes ripple {
+    0% { transform: scale(.82); opacity: 0; }
+    35% { opacity: 1; }
+    100% { transform: scale(1.25); opacity: 0; }
+  }
+
+  /* ---------- Scene 2: make a wish ---------- */
+  h2.lower {
+    font-size: clamp(40px, 8vw, 76px); font-weight: 400; font-style: italic;
+    color: var(--white); text-shadow: 0 0 44px rgba(255,255,255,.1);
+  }
+  .wish-note { margin-top: 14px; font-size: clamp(16px, 2.4vw, 20px); font-style: italic; color: var(--grey); max-width: 520px; }
+
+  .cake-stage { position: relative; margin-top: 30px; filter: drop-shadow(0 30px 40px rgba(0,0,0,.9)); }
+  .cake {
+    position: relative; width: 320px; height: 122px; margin: 128px auto 0;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #1c1c1c 0%, #101010 100%);
+    box-shadow: inset 0 0 0 1px rgba(242,242,242,.16);
+  }
+  .cake::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 26px;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(90deg, #3a3a3a, #dcdcdc 35%, #3a3a3a 70%, #cfcfcf);
+    opacity: .85;
+  }
+  .cake::after {
+    content: 'K.'; position: absolute; top: 56px; left: 50%; translate: -50% 0;
+    font-size: 40px; font-style: italic; color: rgba(242,242,242,.75);
+  }
+  .stand {
+    position: absolute; bottom: -30px; left: 50%; translate: -50% 0; width: 380px; height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(242,242,242,.5), rgba(242,242,242,.12) 65%, transparent 78%);
+  }
+  .stand::after {
+    content: ''; position: absolute; top: 8px; left: 50%; translate: -50% 0;
+    width: 66px; height: 24px;
+    background: linear-gradient(180deg, rgba(242,242,242,.3), rgba(242,242,242,.06));
+    clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  }
+
+  .numerals { position: absolute; top: 44px; left: 50%; translate: -50% 0; display: flex; gap: 36px; z-index: 4; }
+  .numeral { position: relative; cursor: pointer; }
+  .numeral .digit {
+    font-size: 88px; line-height: 1; font-style: italic;
+    background: linear-gradient(180deg, #ffffff 0%, #bdbdbd 55%, #6f6f6f 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,.7));
+  }
+  .numeral .flame {
+    position: absolute; top: -26px; left: 50%; translate: -50% 0;
+    width: 15px; height: 23px;
+    background: radial-gradient(circle at 50% 78%, #ffffff 0%, #e8e8e8 45%, #9c9c9c 75%, rgba(120,120,120,0) 100%);
+    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    transform-origin: 50% 100%;
+    animation: flick .36s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 16px rgba(255,255,255,.75));
+    transition: opacity .35s, transform .35s;
+  }
+  @keyframes flick { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.13) rotate(3deg); } }
+  .numeral .wick { position: absolute; top: -6px; left: 50%; translate: -50% 0; width: 2px; height: 8px; background: #2c2c2c; }
+  .numeral.out .flame { opacity: 0; transform: scale(.15); animation: none; }
+  .numeral .smoke-puff {
+    position: absolute; top: -22px; left: 50%; translate: -50% 0;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(220,220,220,.5); opacity: 0; pointer-events: none;
+  }
+  .numeral.out .smoke-puff { animation: smokeUp 1.8s ease-out forwards; }
+  @keyframes smokeUp {
+    0% { opacity: .75; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-70px) scale(3.6); }
+  }
+  .candle-glow {
+    position: absolute; top: -24px; left: 50%; translate: -50% 0;
+    width: 300px; height: 170px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,.10), transparent 65%);
+    transition: opacity 1.2s;
+  }
+
+  .btn {
+    margin-top: 66px; padding: 13px 40px;
+    font-family: 'EB Garamond', serif; font-size: 14px;
+    letter-spacing: 4px; text-transform: uppercase; color: var(--grey);
+    background: transparent; border: 1px solid rgba(242,242,242,.28); border-radius: 1px;
+    cursor: pointer;
+    transition: color .4s, border-color .4s, box-shadow .4s;
+  }
+  .btn:hover { color: var(--white); border-color: rgba(242,242,242,.7); box-shadow: 0 0 30px rgba(255,255,255,.08); }
+
+  /* ---------- Scene 3: lyric player ---------- */
+  #scene3 { justify-content: flex-start; padding-top: 6vh; overflow-y: auto; }
+
+  .player {
+    width: 100%; max-width: 620px; margin-top: 4vh;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .track-head { text-align: center; }
+  .track-title { font-size: clamp(30px, 5vw, 44px); font-style: italic; }
+  .track-artist { margin-top: 10px; }
+
+  .lyric-stage {
+    position: relative; width: 100%; min-height: 160px; margin: 7vh 0 5vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lyric-line {
+    position: absolute; max-width: 560px; padding: 0 16px;
+    font-size: clamp(20px, 3.4vw, 28px); font-style: italic; line-height: 1.6;
+    color: var(--white); opacity: 0; transform: translateY(14px);
+    transition: opacity 1.4s ease, transform 1.4s ease;
+    text-shadow: 0 0 30px rgba(255,255,255,.12);
+  }
+  .lyric-line.in { opacity: 1; transform: translateY(0); }
+  .lyric-line.gone { opacity: 0; transform: translateY(-14px); }
+
+  .progress-wrap { width: 100%; max-width: 480px; }
+  .progress-track { position: relative; height: 1px; background: rgba(242,242,242,.18); }
+  .progress-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+    background: var(--white); box-shadow: 0 0 8px rgba(255,255,255,.5);
+  }
+  .progress-dot {
+    position: absolute; top: 50%; translate: -50% -50%; left: 0%;
+    width: 9px; height: 9px; border-radius: 50%; background: var(--white);
+    box-shadow: 0 0 10px rgba(255,255,255,.6);
+  }
+  .time-row {
+    display: flex; justify-content: space-between; margin-top: 12px;
+    font-size: 13px; letter-spacing: 2px; color: var(--grey);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .after-song { opacity: 0; transition: opacity 2s; text-align: center; margin-top: 6vh; padding-bottom: 70px; }
+  .after-song.show { opacity: 1; }
+  .final-line { font-size: clamp(26px, 4.6vw, 40px); font-style: italic; }
+  .countdown-label { margin-top: 5vh; margin-bottom: 20px; }
+  .countdown { display: flex; gap: clamp(16px, 4vw, 40px); justify-content: center; }
+  .cd-num {
+    font-size: clamp(32px, 5.6vw, 50px); line-height: 1; color: var(--white);
+    border-bottom: 1px solid rgba(242,242,242,.25); padding-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-unit { margin-top: 9px; font-size: 10.5px; letter-spacing: 3.5px; text-transform: uppercase; color: var(--grey-dim); }
+
+  #musicBtn {
+    position: fixed; top: 20px; right: 20px; z-index: 100;
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid rgba(242,242,242,.3);
+    background: rgba(10,10,10,.6); backdrop-filter: blur(6px);
+    color: var(--grey); font-size: 17px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .3s, border-color .3s, box-shadow .3s;
+  }
+  #musicBtn:hover { color: var(--white); border-color: rgba(242,242,242,.6); }
+  #musicBtn.playing { color: var(--white); box-shadow: 0 0 22px rgba(255,255,255,.12); }
+
+  .footer-note {
+    position: fixed; bottom: 12px; left: 0; right: 0; z-index: 30; pointer-events: none;
+    text-align: center; font-size: 10.5px; letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(242,242,242,.22);
+  }
+
+  @media (max-width: 560px) {
+    .cake-stage { scale: .8; margin-top: 0; }
+    .play { width: 72px; height: 72px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="smoke"></canvas>
+<canvas id="fx"></canvas>
+<canvas id="grain"></canvas>
+<div class="vignette"></div>
+
+<button id="musicBtn" title="Toggle music" aria-label="Toggle music">♪</button>
+
+<!-- Scene 1: title card -->
+<section class="scene active" id="scene1">
+  <div class="smallcaps">a song for someone</div>
+  <div class="initial">K.</div>
+  <div class="song-sub">for Kimmy — turning twenty-four</div>
+  <div class="smallcaps band-line">in black and white · like the songs she plays at midnight</div>
+  <button class="play" id="playBtn" aria-label="Press play"></button>
+  <div class="hint">press play</div>
+</section>
+
+<!-- Scene 2: make a wish -->
+<section class="scene" id="scene2">
+  <h2 class="lower">make a wish.</h2>
+  <p class="wish-note" id="wishNote">two flames in a dark room. touch them, softly, one by one.</p>
+  <div class="cake-stage">
+    <div class="candle-glow" id="candleGlow"></div>
+    <div class="numerals">
+      <div class="numeral" data-n="2">
+        <div class="flame"></div><div class="wick"></div><div class="smoke-puff"></div>
+        <div class="digit">2</div>
+      </div>
+      <div class="numeral" data-n="4">
+        <div class="flame"></div><div class="wick"></div><div class="smoke-puff"></div>
+        <div class="digit">4</div>
+      </div>
+    </div>
+    <div class="cake">
+      <div class="stand"></div>
+    </div>
+  </div>
+  <button class="btn" id="blowBtn">one slow breath</button>
+</section>
+
+<!-- Scene 3: lyric player -->
+<section class="scene" id="scene3">
+  <div class="player">
+    <div class="track-head">
+      <div class="smallcaps">now playing</div>
+      <div class="track-title">K. — for Kimmy</div>
+      <div class="smallcaps track-artist">side b · track 24 · her song</div>
+    </div>
+    <div class="lyric-stage" id="lyricStage"></div>
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="pFill"></div>
+        <div class="progress-dot" id="pDot"></div>
+      </div>
+      <div class="time-row"><span id="tCur">0:00</span><span id="tTot">0:00</span></div>
+    </div>
+    <div class="after-song" id="afterSong">
+      <div class="final-line">happy birthday, kimmy.</div>
+      <div class="smallcaps" style="margin-top:18px;">this one plays forever</div>
+      <div class="smallcaps countdown-label">track twenty-four begins in</div>
+      <div class="countdown">
+        <div><div class="cd-num" id="cdD">—</div><div class="cd-unit">days</div></div>
+        <div><div class="cd-num" id="cdH">—</div><div class="cd-unit">hours</div></div>
+        <div><div class="cd-num" id="cdM">—</div><div class="cd-unit">minutes</div></div>
+        <div><div class="cd-num" id="cdS">—</div><div class="cd-unit">seconds</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-note">december the twenty-ninth · in black and white</div>
+
+<script>
+'use strict';
+
+/* ============ drifting smoke background ============ */
+const smCv = document.getElementById('smoke');
+const smCtx = smCv.getContext('2d');
+let wisps = [];
+
+function resizeSmoke() {
+  smCv.width = innerWidth;
+  smCv.height = innerHeight;
+  const n = Math.min(16, Math.max(9, (innerWidth / 110) | 0));
+  wisps = Array.from({ length: n }, () => ({
+    x: Math.random() * smCv.width,
+    y: Math.random() * smCv.height,
+    r: Math.random() * 130 + 60,
+    vx: (Math.random() - 0.5) * 0.16,
+    vy: -(Math.random() * 0.12 + 0.03),
+    a: Math.random() * 0.05 + 0.02,
+    p: Math.random() * Math.PI * 2
+  }));
+}
+function drawSmoke(t) {
+  smCtx.clearRect(0, 0, smCv.width, smCv.height);
+  for (const w of wisps) {
+    w.x += w.vx + Math.sin(w.p + t * 0.0003) * 0.2;
+    w.y += w.vy;
+    if (w.y < -w.r) { w.y = smCv.height + w.r; w.x = Math.random() * smCv.width; }
+    if (w.x < -w.r) w.x = smCv.width + w.r;
+    if (w.x > smCv.width + w.r) w.x = -w.r;
+    const a = w.a * (0.7 + 0.3 * Math.sin(w.p + t * 0.0005));
+    const g = smCtx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.r);
+    g.addColorStop(0, `rgba(210,210,210,${a})`);
+    g.addColorStop(1, 'rgba(210,210,210,0)');
+    smCtx.fillStyle = g;
+    smCtx.beginPath();
+    smCtx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+    smCtx.fill();
+  }
+  requestAnimationFrame(drawSmoke);
+}
+resizeSmoke();
+requestAnimationFrame(drawSmoke);
+
+/* ============ film grain ============ */
+const grCv = document.getElementById('grain');
+const grCtx = grCv.getContext('2d');
+const tile = document.createElement('canvas');
+tile.width = 160; tile.height = 160;
+const tileCtx = tile.getContext('2d');
+
+function resizeGrain() { grCv.width = innerWidth; grCv.height = innerHeight; }
+resizeGrain();
+
+function refreshGrain() {
+  const img = tileCtx.createImageData(160, 160);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = (Math.random() * 255) | 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
+    d[i + 3] = 255;
+  }
+  tileCtx.putImageData(img, 0, 0);
+  grCtx.clearRect(0, 0, grCv.width, grCv.height);
+  grCtx.fillStyle = grCtx.createPattern(tile, 'repeat');
+  grCtx.fillRect(0, 0, grCv.width, grCv.height);
+}
+refreshGrain();
+setInterval(refreshGrain, 110);
+
+/* ============ fx: white dust ============ */
+const fxCv = document.getElementById('fx');
+const fxCtx = fxCv.getContext('2d');
+function resizeFx() { fxCv.width = innerWidth; fxCv.height = innerHeight; }
+resizeFx();
+addEventListener('resize', () => { resizeSmoke(); resizeFx(); resizeGrain(); });
+
+let dust = [];
+let driftOn = false;
+
+function dustBurst(x, y, count = 30, power = 2.6) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const v = Math.random() * power + 0.4;
+    dust.push({
+      x, y,
+      vx: Math.cos(ang) * v,
+      vy: Math.sin(ang) * v - 0.5,
+      r: Math.random() * 1.6 + 0.5,
+      life: 1,
+      decay: Math.random() * 0.01 + 0.005,
+      tw: Math.random() * Math.PI * 2
+    });
+  }
+}
+function spawnDrifter() {
+  dust.push({
+    x: Math.random() * fxCv.width,
+    y: fxCv.height + 8,
+    vx: (Math.random() - 0.5) * 0.25,
+    vy: -(Math.random() * 0.5 + 0.25),
+    r: Math.random() * 1.4 + 0.4,
+    life: 1,
+    decay: 0.0022,
+    tw: Math.random() * Math.PI * 2
+  });
+}
+
+function fxLoop(t) {
+  fxCtx.clearRect(0, 0, fxCv.width, fxCv.height);
+  if (driftOn && Math.random() < 0.14) spawnDrifter();
+  dust = dust.filter(p => p.life > 0 && p.y > -20);
+  for (const p of dust) {
+    p.vy += 0.008; p.vx *= 0.992; p.vy *= 0.992;
+    p.x += p.vx + Math.sin(t * 0.001 + p.tw) * 0.18;
+    p.y += p.vy;
+    p.life -= p.decay;
+    const twinkle = 0.5 + 0.5 * Math.sin(p.tw + t * 0.014);
+    fxCtx.globalAlpha = Math.max(p.life, 0) * twinkle * 0.85;
+    fxCtx.fillStyle = '#ffffff';
+    fxCtx.beginPath();
+    fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    fxCtx.fill();
+  }
+  fxCtx.globalAlpha = 1;
+  requestAnimationFrame(fxLoop);
+}
+requestAnimationFrame(fxLoop);
+
+/* ============ music: slow, echoing, dream-pop rendition ============ */
+let audioCtx = null;
+let master = null, delaySend = null;
+let musicOn = false;
+let musicTimer = null;
+const musicBtn = document.getElementById('musicBtn');
+
+const MELODY = [
+  [0,.75],[0,.25],[2,1],[0,1],[5,1],[4,2],
+  [0,.75],[0,.25],[2,1],[0,1],[7,1],[5,2],
+  [0,.75],[0,.25],[12,1],[9,1],[5,1],[4,1],[2,2],
+  [10,.75],[10,.25],[9,1],[5,1],[7,1],[5,2]
+];
+function noteFreq(semi) { return 261.63 * Math.pow(2, semi / 12); }
+
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    master = audioCtx.createGain();
+    master.gain.value = 0.85;
+    master.connect(audioCtx.destination);
+    // dreamy echo: feedback delay
+    const delay = audioCtx.createDelay(2);
+    delay.delayTime.value = 0.52;
+    const fb = audioCtx.createGain();
+    fb.gain.value = 0.42;
+    const wet = audioCtx.createGain();
+    wet.gain.value = 0.5;
+    delay.connect(fb).connect(delay);
+    delay.connect(wet).connect(master);
+    delaySend = delay;
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playNote(freq, start, dur, vol) {
+  // two slightly detuned sines = soft chorus, very CAS
+  for (const det of [0, 2.4]) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq + det;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(vol * (det ? 0.5 : 1), start + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0006, start + dur);
+    osc.connect(gain);
+    gain.connect(master);
+    gain.connect(delaySend);
+    osc.start(start);
+    osc.stop(start + dur + 0.1);
+  }
+}
+
+function playDrone(start, dur) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 65.41; // C2
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(0.035, start + 2);
+  gain.gain.linearRampToValueAtTime(0.02, start + dur - 2);
+  gain.gain.linearRampToValueAtTime(0.0001, start + dur);
+  osc.connect(gain).connect(master);
+  osc.start(start);
+  osc.stop(start + dur);
+}
+
+function playMelodyOnce() {
+  const beat = 0.8; // very slow
+  const t0 = audioCtx.currentTime + 0.1;
+  let total = 0;
+  for (const [semi, beats] of MELODY) total += beats;
+  playDrone(t0, total * beat + 3);
+  total = 0;
+  for (const [semi, beats] of MELODY) {
+    playNote(noteFreq(semi), t0 + total * beat, beats * beat * 2.2, 0.055);
+    total += beats;
+  }
+  return (total * beat + 3.5) * 1000;
+}
+
+function startMusic() {
+  ensureAudio();
+  musicOn = true;
+  musicBtn.classList.add('playing');
+  musicBtn.textContent = '❚❚';
+  const loop = () => { const ms = playMelodyOnce(); musicTimer = setTimeout(loop, ms); };
+  loop();
+}
+function stopMusic() {
+  musicOn = false;
+  musicBtn.classList.remove('playing');
+  musicBtn.textContent = '♪';
+  clearTimeout(musicTimer);
+}
+musicBtn.addEventListener('click', () => (musicOn ? stopMusic() : startMusic()));
+
+function chime(freq, dur = 0.6, vol = 0.05) {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.0006, t + dur);
+  osc.connect(gain);
+  gain.connect(master);
+  gain.connect(delaySend);
+  osc.start(t);
+  osc.stop(t + dur);
+}
+
+/* ============ scenes ============ */
+function showScene(id) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.toggle('active', s.id === id));
+}
+
+/* ---- Scene 1 ---- */
+let started = false;
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (started) return;
+  started = true;
+  driftOn = true;
+  if (!musicOn) startMusic();
+  chime(523.25, 1.2); chime(659.25, 1.4);
+  setTimeout(() => showScene('scene2'), 900);
+});
+
+/* ---- Scene 2 ---- */
+let flamesLeft = 2;
+document.querySelectorAll('.numeral').forEach(el => {
+  el.addEventListener('click', () => extinguish(el));
+});
+function extinguish(el) {
+  if (el.classList.contains('out')) return;
+  el.classList.add('out');
+  flamesLeft--;
+  chime(392 + (2 - flamesLeft) * 130, 0.8, 0.045);
+  const r = el.getBoundingClientRect();
+  dustBurst(r.left + r.width / 2, r.top, 14, 1.6);
+  if (flamesLeft === 0) {
+    document.getElementById('candleGlow').style.opacity = '0';
+    document.getElementById('wishNote').textContent = 'your wish is smoke now. it goes where the songs go.';
+    setTimeout(() => { showScene('scene3'); startSong(); }, 2200);
+  }
+}
+document.getElementById('blowBtn').addEventListener('click', () => {
+  const lit = [...document.querySelectorAll('.numeral:not(.out)')];
+  lit.forEach((el, i) => setTimeout(() => extinguish(el), i * 500));
+});
+
+/* ---- Scene 3: lyric player ---- */
+const LYRICS = [
+  'the room goes dim, the record starts to spin.',
+  'you, in the doorway of december.',
+  'twenty-three fades out slow, like an outro.',
+  'twenty-four hums in, soft as a first chord.',
+  'you read the world like it was written for you —',
+  'every heroine you ever loved is a little bit you.',
+  'if this year were a song, i\u2019d leave it on repeat:',
+  'slow where you want it, gentle where it hurts.',
+  'and when the twenty-ninth arrives, quiet as snowfall,',
+  'may every wish find you, dressed in silver light.'
+];
+const LINE_MS = 5200;
+
+let songStarted = false;
+function startSong() {
+  if (songStarted) return;
+  songStarted = true;
+
+  const stage = document.getElementById('lyricStage');
+  const lines = LYRICS.map(txt => {
+    const el = document.createElement('div');
+    el.className = 'lyric-line';
+    el.textContent = txt;
+    stage.appendChild(el);
+    return el;
+  });
+
+  const total = LYRICS.length * LINE_MS + 2000;
+  document.getElementById('tTot').textContent = fmt(total);
+  const t0 = performance.now();
+
+  // Single interval clock drives lyrics + progress so they never desync.
+  // (rAF freezes in hidden tabs; an interval keeps the song moving.)
+  const clock = setInterval(() => {
+    const el = performance.now() - t0;
+    const frac = Math.min(el / total, 1);
+
+    lines.forEach((line, i) => {
+      const start = i * LINE_MS;
+      const end = (i + 1) * LINE_MS - 600;
+      if (el >= start && el < end) {
+        line.classList.add('in');
+        line.classList.remove('gone');
+      } else if (el >= end) {
+        line.classList.remove('in');
+        line.classList.add('gone');
+      }
+    });
+
+    document.getElementById('pFill').style.width = (frac * 100) + '%';
+    document.getElementById('pDot').style.left = (frac * 100) + '%';
+    document.getElementById('tCur').textContent = fmt(Math.min(el, total));
+    if (frac >= 1) { clearInterval(clock); endSong(); }
+  }, 120);
+}
+
+function fmt(ms) {
+  const s = Math.round(ms / 1000);
+  return ((s / 60) | 0) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function endSong() {
+  document.getElementById('afterSong').classList.add('show');
+  dustBurst(innerWidth / 2, innerHeight * 0.3, 60, 3);
+  startCountdown();
+}
+
+function nextBirthday() {
+  const now = new Date();
+  let target = new Date(now.getFullYear(), 11, 29, 0, 0, 0);
+  if (target <= now) target = new Date(now.getFullYear() + 1, 11, 29, 0, 0, 0);
+  return target;
+}
+function startCountdown() {
+  const target = nextBirthday();
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const diff = target - new Date();
+    if (diff <= 0) {
+      document.querySelector('.countdown-label').textContent = 'track twenty-four is playing now';
+      ['cdD','cdH','cdM','cdS'].forEach(id => document.getElementById(id).textContent = '00');
+      return;
+    }
+    const s = (diff / 1000) | 0;
+    document.getElementById('cdD').textContent = pad((s / 86400) | 0);
+    document.getElementById('cdH').textContent = pad(((s % 86400) / 3600) | 0);
+    document.getElementById('cdM').textContent = pad(((s % 3600) / 60) | 0);
+    document.getElementById('cdS').textContent = pad(s % 60);
+    setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+/* soft dust wherever she touches, scene 3 */
+document.getElementById('scene3').addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  dustBurst(e.clientX, e.clientY, 20, 2);
+  chime(500 + Math.random() * 250, 0.7, 0.03);
+});
+</script>
+</body>
+</html>

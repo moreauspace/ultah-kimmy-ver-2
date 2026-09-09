@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>K. — for Kimmy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital@0;1&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --white: #ececec;
+    --grey: #8f8f8f;
+    --grey-dim: #4f4f4f;
+    --line: rgba(236,236,236,.16);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    user-select: none;
+  }
+  .serif { font-family: 'EB Garamond', serif; }
+
+  /* ---------- loader ---------- */
+  #loader {
+    position: fixed; inset: 0; z-index: 200;
+    background: #e9e9e7;
+    display: flex; align-items: flex-end; justify-content: center;
+    transition: transform 1.1s cubic-bezier(.77,0,.18,1);
+  }
+  #loader.done { transform: translateY(-100%); }
+  #loader .pct {
+    margin-bottom: 26px; font-size: 12px; letter-spacing: 3px; color: #111;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- chrome ---------- */
+  #smoke, #fx, #grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #smoke { z-index: 0; }
+  #fx { z-index: 50; }
+  #grain { z-index: 60; opacity: .06; }
+  .vignette {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,.6) 100%);
+  }
+
+  #hairline {
+    position: fixed; top: 0; left: 0; height: 1px; width: 0%;
+    background: var(--white); z-index: 110; opacity: .7;
+    box-shadow: 0 0 6px rgba(255,255,255,.4);
+  }
+
+  .corner { position: fixed; z-index: 100; font-size: 11px; letter-spacing: 3px; text-transform: lowercase; color: var(--grey); }
+  #dot {
+    top: 22px; left: 24px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--grey-dim); transition: background .5s;
+  }
+  #dot.on { background: var(--white); animation: dotPulse 1.8s ease-in-out infinite; }
+  @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  #logo {
+    top: 16px; left: 50%; translate: -50% 0;
+    font-family: 'EB Garamond', serif; font-style: italic; font-size: 20px; color: var(--white);
+    letter-spacing: 0;
+  }
+  #timebox {
+    top: 20px; right: 24px; cursor: pointer; color: var(--grey);
+    font-variant-numeric: tabular-nums;
+    transition: color .3s;
+  }
+  #timebox:hover { color: var(--white); }
+  #navLeft {
+    bottom: 20px; left: 24px; cursor: pointer;
+    border-bottom: 1px solid transparent; padding-bottom: 2px;
+    transition: color .3s, border-color .3s;
+  }
+  #navLeft:hover { color: var(--white); border-color: var(--line); }
+  #navLeft.hidden { visibility: hidden; }
+  #cornerRight { bottom: 20px; right: 24px; color: var(--grey-dim); }
+
+  /* ---------- scenes ---------- */
+  .scene {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    opacity: 0; visibility: hidden;
+    transition: opacity 1.4s ease, visibility 1.4s;
+  }
+  .scene.active { opacity: 1; visibility: visible; }
+
+  /* ---------- scene A: film strip ---------- */
+  .strip {
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(18px, 9vw, 130px);
+    width: 100%;
+  }
+  .frame {
+    position: relative; width: 96px; height: 118px; flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: #111;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .5s ease, border-color .5s;
+  }
+  .frame:hover { transform: translateY(-6px); border-color: rgba(236,236,236,.4); }
+  .frame .cap {
+    position: absolute; bottom: -24px; left: 50%; translate: -50% 0;
+    font-size: 9.5px; letter-spacing: 2.5px; color: var(--grey-dim); white-space: nowrap;
+    text-transform: lowercase;
+  }
+  .frame .big { font-family: 'EB Garamond', serif; font-style: italic; font-size: 52px; color: var(--white); opacity: .9; }
+  .frame .small-date { font-size: 13px; letter-spacing: 3px; color: var(--grey); line-height: 1.9; }
+
+  .mini-candle { position: relative; width: 10px; height: 44px; background: linear-gradient(180deg, #e8e8e8, #9a9a9a); border-radius: 3px; }
+  .mini-candle::before {
+    content: ''; position: absolute; top: -18px; left: 50%; translate: -50% 0;
+    width: 10px; height: 15px;
+    background: radial-gradient(circle at 50% 75%, #fff 0%, #ddd 50%, rgba(150,150,150,0) 100%);
+    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    animation: flick .4s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,.7));
+  }
+  @keyframes flick { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
+
+  #playTile { cursor: pointer; border-color: rgba(236,236,236,.42); }
+  #playTile .icon { position: relative; width: 0; height: 0;
+    border-left: 18px solid var(--white);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    margin-left: 5px;
+    transition: opacity .3s;
+  }
+  #playTile.playing .icon { border: none; width: 16px; height: 24px; margin-left: 0; }
+  #playTile.playing .icon::before, #playTile.playing .icon::after {
+    content: ''; position: absolute; top: 0; width: 5px; height: 24px; background: var(--white);
+  }
+  #playTile.playing .icon::before { left: 0; }
+  #playTile.playing .icon::after { right: 0; }
+  #playTile::after {
+    content: ''; position: absolute; inset: -1px; border: 1px solid rgba(236,236,236,.25);
+    animation: ripple 3s ease-out infinite; pointer-events: none;
+  }
+  #playTile.playing::after { animation: none; opacity: 0; }
+  @keyframes ripple {
+    0% { transform: scale(.9); opacity: 0; }
+    40% { opacity: 1; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+
+  .quote-zone { margin-top: 74px; min-height: 76px; max-width: 640px; position: relative; width: 100%; }
+  .qline {
+    position: absolute; left: 50%; translate: -50% 0; width: 100%; padding: 0 12px;
+    font-family: 'EB Garamond', serif; font-style: italic;
+    font-size: clamp(17px, 2.6vw, 22px); line-height: 1.65; color: var(--white);
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+    text-shadow: 0 0 24px rgba(255,255,255,.1);
+  }
+  .qline.in { opacity: 1; transform: translateY(0); }
+  .bracket-name { margin-top: 40px; font-size: 12px; letter-spacing: 3px; color: var(--grey); }
+  .bracket-name .br { color: var(--grey-dim); }
+  .mini-cd { margin-top: 16px; font-size: 10.5px; letter-spacing: 3px; color: var(--grey-dim); font-variant-numeric: tabular-nums; }
+
+  /* ---------- scene B: wish ---------- */
+  .wish-title { font-size: clamp(30px, 5.4vw, 48px); font-style: italic; }
+  .wish-note { margin-top: 12px; font-size: 12px; letter-spacing: 3px; color: var(--grey); text-transform: lowercase; }
+
+  .numerals { display: flex; gap: 60px; margin-top: 64px; }
+  .numeral { position: relative; cursor: pointer; }
+  .numeral .digit {
+    font-family: 'EB Garamond', serif; font-style: italic;
+    font-size: clamp(90px, 16vw, 130px); line-height: 1;
+    background: linear-gradient(180deg, #ffffff 0%, #b9b9b9 55%, #676767 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .numeral .flame {
+    position: absolute; top: -34px; left: 50%; translate: -50% 0;
+    width: 17px; height: 26px;
+    background: radial-gradient(circle at 50% 78%, #ffffff 0%, #e6e6e6 45%, #979797 75%, rgba(120,120,120,0) 100%);
+    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    transform-origin: 50% 100%;
+    animation: flick .36s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 18px rgba(255,255,255,.7));
+    transition: opacity .35s, transform .35s;
+  }
+  .numeral .wick { position: absolute; top: -10px; left: 50%; translate: -50% 0; width: 2px; height: 9px; background: #2c2c2c; }
+  .numeral.out .flame { opacity: 0; transform: scale(.15); animation: none; }
+  .numeral .smoke-puff {
+    position: absolute; top: -28px; left: 50%; translate: -50% 0;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(220,220,220,.5); opacity: 0; pointer-events: none;
+  }
+  .numeral.out .smoke-puff { animation: smokeUp 1.9s ease-out forwards; }
+  @keyframes smokeUp {
+    0% { opacity: .75; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(3.8); }
+  }
+
+  .btn {
+    margin-top: 70px; padding: 12px 34px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 11px;
+    letter-spacing: 4px; text-transform: lowercase; color: var(--grey);
+    background: transparent; border: 1px solid var(--line); border-radius: 1px;
+    cursor: pointer;
+    transition: color .4s, border-color .4s;
+  }
+  .btn:hover { color: var(--white); border-color: rgba(236,236,236,.5); }
+
+  /* ---------- scene C: ending ---------- */
+  .final-line { font-size: clamp(34px, 6.4vw, 64px); font-style: italic; text-shadow: 0 0 40px rgba(255,255,255,.12); }
+  .final-sub { margin-top: 22px; font-size: 11px; letter-spacing: 4px; color: var(--grey); text-transform: lowercase; }
+  .cd-label { margin-top: 8vh; font-size: 10.5px; letter-spacing: 4px; color: var(--grey-dim); text-transform: lowercase; }
+  .countdown { display: flex; gap: clamp(20px, 5vw, 48px); justify-content: center; margin-top: 24px; }
+  .cd-num {
+    font-size: clamp(30px, 5vw, 46px); font-weight: 300; line-height: 1; color: var(--white);
+    border-bottom: 1px solid var(--line); padding-bottom: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-unit { margin-top: 10px; font-size: 9.5px; letter-spacing: 3px; text-transform: lowercase; color: var(--grey-dim); }
+
+  @media (max-width: 640px) {
+    .strip { gap: 16px; }
+    .frame { width: 72px; height: 90px; }
+    .frame .big { font-size: 36px; }
+    .frame .cap { font-size: 8.5px; bottom: -20px; }
+    .numerals { gap: 40px; }
+    #logo { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loader"><div class="pct" id="pct">0%</div></div>
+
+<canvas id="smoke"></canvas>
+<canvas id="fx"></canvas>
+<canvas id="grain"></canvas>
+<div class="vignette"></div>
+<div id="hairline"></div>
+
+<div class="corner" id="dot"></div>
+<div class="corner" id="logo">k.</div>
+<div class="corner" id="timebox" title="play / pause">▶&nbsp; 0:00 / 0:00</div>
+<div class="corner" id="navLeft">make a wish</div>
+<div class="corner" id="cornerRight">dec 29 — she turns 24</div>
+
+<audio id="song" src="k.mp3" preload="auto" loop></audio>
+
+<!-- Scene A: film strip home -->
+<section class="scene active" id="sceneA">
+  <div class="strip">
+    <div class="frame"><div class="big">2</div><div class="cap">two</div></div>
+    <div class="frame"><div class="mini-candle"></div><div class="cap">the wish</div></div>
+    <div class="frame" id="playTile" role="button" aria-label="Play the song"><div class="icon"></div><div class="cap">press play</div></div>
+    <div class="frame"><div class="big">4</div><div class="cap">four</div></div>
+    <div class="frame"><div class="small-date">xii<br>29</div><div class="cap">the date</div></div>
+  </div>
+  <div class="quote-zone" id="quoteZone">
+    <div class="qline in" id="qIdle">this one is yours. press play.</div>
+  </div>
+  <div class="bracket-name"><span class="br">[</span>&nbsp; for kimmy &nbsp;<span class="br">]</span></div>
+  <div class="mini-cd" id="miniCd"></div>
+</section>
+
+<!-- Scene B: make a wish -->
+<section class="scene" id="sceneB">
+  <div class="wish-title serif">make a wish.</div>
+  <div class="wish-note" id="wishNote">two flames in a dark room — touch them, softly</div>
+  <div class="numerals">
+    <div class="numeral">
+      <div class="flame"></div><div class="wick"></div><div class="smoke-puff"></div>
+      <div class="digit">2</div>
+    </div>
+    <div class="numeral">
+      <div class="flame"></div><div class="wick"></div><div class="smoke-puff"></div>
+      <div class="digit">4</div>
+    </div>
+  </div>
+  <button class="btn" id="blowBtn">one slow breath</button>
+</section>
+
+<!-- Scene C: ending -->
+<section class="scene" id="sceneC">
+  <div class="final-line serif">happy birthday, kimmy.</div>
+  <div class="final-sub">this one plays forever</div>
+  <div class="cd-label">track twenty-four begins in</div>
+  <div class="countdown">
+    <div><div class="cd-num" id="cdD">—</div><div class="cd-unit">days</div></div>
+    <div><div class="cd-num" id="cdH">—</div><div class="cd-unit">hours</div></div>
+    <div><div class="cd-num" id="cdM">—</div><div class="cd-unit">minutes</div></div>
+    <div><div class="cd-num" id="cdS">—</div><div class="cd-unit">seconds</div></div>
+  </div>
+</section>
+
+<script>
+'use strict';
+
+/* ============ loader: real mp3 preload progress ============ */
+const loaderEl = document.getElementById('loader');
+const pctEl = document.getElementById('pct');
+const song = document.getElementById('song');
+const loaderStart = performance.now();
+
+function finishLoader() {
+  const wait = Math.max(0, 1600 - (performance.now() - loaderStart));
+  setTimeout(() => {
+    pctEl.textContent = '100%';
+    setTimeout(() => loaderEl.classList.add('done'), 250);
+  }, wait);
+}
+
+fetch('k.mp3')
+  .then(res => {
+    const total = +res.headers.get('Content-Length') || 5200000;
+    const reader = res.body.getReader();
+    const chunks = [];
+    let got = 0;
+    const pump = () => reader.read().then(({ done, value }) => {
+      if (done) {
+        const blob = new Blob(chunks, { type: 'audio/mpeg' });
+        song.src = URL.createObjectURL(blob);
+        finishLoader();
+        return;
+      }
+      chunks.push(value);
+      got += value.length;
+      pctEl.textContent = Math.min(99, (got / total * 100) | 0) + '%';
+      return pump();
+    });
+    return pump();
+  })
+  .catch(() => { finishLoader(); }); // audio element's own src remains the fallback
+
+/* ============ smoke background ============ */
+const smCv = document.getElementById('smoke');
+const smCtx = smCv.getContext('2d');
+let wisps = [];
+
+function resizeSmoke() {
+  smCv.width = innerWidth;
+  smCv.height = innerHeight;
+  const n = Math.min(14, Math.max(8, (innerWidth / 130) | 0));
+  wisps = Array.from({ length: n }, () => ({
+    x: Math.random() * smCv.width,
+    y: Math.random() * smCv.height,
+    r: Math.random() * 120 + 60,
+    vx: (Math.random() - 0.5) * 0.14,
+    vy: -(Math.random() * 0.1 + 0.03),
+    a: Math.random() * 0.04 + 0.015,
+    p: Math.random() * Math.PI * 2
+  }));
+}
+function drawSmoke(t) {
+  smCtx.clearRect(0, 0, smCv.width, smCv.height);
+  for (const w of wisps) {
+    w.x += w.vx + Math.sin(w.p + t * 0.0003) * 0.18;
+    w.y += w.vy;
+    if (w.y < -w.r) { w.y = smCv.height + w.r; w.x = Math.random() * smCv.width; }
+    if (w.x < -w.r) w.x = smCv.width + w.r;
+    if (w.x > smCv.width + w.r) w.x = -w.r;
+    const a = w.a * (0.7 + 0.3 * Math.sin(w.p + t * 0.0005));
+    const g = smCtx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.r);
+    g.addColorStop(0, `rgba(200,200,200,${a})`);
+    g.addColorStop(1, 'rgba(200,200,200,0)');
+    smCtx.fillStyle = g;
+    smCtx.beginPath();
+    smCtx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+    smCtx.fill();
+  }
+  requestAnimationFrame(drawSmoke);
+}
+resizeSmoke();
+requestAnimationFrame(drawSmoke);
+
+/* ============ film grain ============ */
+const grCv = document.getElementById('grain');
+const grCtx = grCv.getContext('2d');
+const tile = document.createElement('canvas');
+tile.width = 160; tile.height = 160;
+const tileCtx = tile.getContext('2d');
+
+function resizeGrain() { grCv.width = innerWidth; grCv.height = innerHeight; }
+resizeGrain();
+
+function refreshGrain() {
+  const img = tileCtx.createImageData(160, 160);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = (Math.random() * 255) | 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
+    d[i + 3] = 255;
+  }
+  tileCtx.putImageData(img, 0, 0);
+  grCtx.clearRect(0, 0, grCv.width, grCv.height);
+  grCtx.fillStyle = grCtx.createPattern(tile, 'repeat');
+  grCtx.fillRect(0, 0, grCv.width, grCv.height);
+}
+refreshGrain();
+setInterval(refreshGrain, 110);
+
+/* ============ fx: dust ============ */
+const fxCv = document.getElementById('fx');
+const fxCtx = fxCv.getContext('2d');
+function resizeFx() { fxCv.width = innerWidth; fxCv.height = innerHeight; }
+resizeFx();
+addEventListener('resize', () => { resizeSmoke(); resizeFx(); resizeGrain(); });
+
+let dust = [];
+function dustBurst(x, y, count = 22, power = 2.2) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const v = Math.random() * power + 0.4;
+    dust.push({
+      x, y,
+      vx: Math.cos(ang) * v,
+      vy: Math.sin(ang) * v - 0.5,
+      r: Math.random() * 1.5 + 0.5,
+      life: 1,
+      decay: Math.random() * 0.01 + 0.005,
+      tw: Math.random() * Math.PI * 2
+    });
+  }
+}
+function fxLoop(t) {
+  fxCtx.clearRect(0, 0, fxCv.width, fxCv.height);
+  dust = dust.filter(p => p.life > 0);
+  for (const p of dust) {
+    p.vy += 0.008; p.vx *= 0.992; p.vy *= 0.992;
+    p.x += p.vx; p.y += p.vy;
+    p.life -= p.decay;
+    const twinkle = 0.5 + 0.5 * Math.sin(p.tw + t * 0.014);
+    fxCtx.globalAlpha = Math.max(p.life, 0) * twinkle * 0.85;
+    fxCtx.fillStyle = '#ffffff';
+    fxCtx.beginPath();
+    fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    fxCtx.fill();
+  }
+  fxCtx.globalAlpha = 1;
+  requestAnimationFrame(fxLoop);
+}
+requestAnimationFrame(fxLoop);
+
+/* ============ tiny chime (candles) ============ */
+let audioCtx = null;
+function chime(freq, dur = 0.7, vol = 0.04) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.0006, t + dur);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + dur);
+}
+
+/* ============ the song: real mp3 drives everything ============ */
+const playTile = document.getElementById('playTile');
+const timebox = document.getElementById('timebox');
+const dot = document.getElementById('dot');
+const hairline = document.getElementById('hairline');
+
+function fmt(s) {
+  s = Math.max(0, s | 0);
+  return ((s / 60) | 0) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function setPlayingUI(playing) {
+  playTile.classList.toggle('playing', playing);
+  dot.classList.toggle('on', playing);
+}
+
+function togglePlay() {
+  if (song.paused) song.play();
+  else song.pause();
+}
+playTile.addEventListener('click', togglePlay);
+timebox.addEventListener('click', togglePlay);
+
+song.addEventListener('play', () => setPlayingUI(true));
+song.addEventListener('pause', () => setPlayingUI(false));
+
+/* lyrics timed to the real track, driven by audio.currentTime */
+const LYRICS = [
+  'the room goes dim, the record starts to spin.',
+  'you, in the doorway of december.',
+  'twenty-three fades out slow, like an outro.',
+  'twenty-four hums in, soft as a first chord.',
+  'you read the world like it was written for you —',
+  'every heroine you ever loved is a little bit you.',
+  'if this year were a song, i\u2019d leave it on repeat:',
+  'slow where you want it, gentle where it hurts.',
+  'and when the twenty-ninth arrives, quiet as snowfall,',
+  'may every wish find you, dressed in silver light.',
+  'this one is yours, kimmy. it plays forever.'
+];
+const LYRIC_START = 3;   // seconds into the track
+const LYRIC_EVERY = 10;  // seconds per line
+
+const quoteZone = document.getElementById('quoteZone');
+const qIdle = document.getElementById('qIdle');
+const qEls = LYRICS.map(txt => {
+  const el = document.createElement('div');
+  el.className = 'qline serif';
+  el.textContent = txt;
+  quoteZone.appendChild(el);
+  return el;
+});
+
+/* single interval clock: lyrics, time display, hairline, countdown */
+setInterval(() => {
+  const dur = song.duration || 0;
+  const cur = song.currentTime || 0;
+
+  timebox.innerHTML = (song.paused ? '▶' : '❚❚') + '&nbsp; ' + fmt(cur) + ' / ' + (dur ? fmt(dur) : '—:——');
+  hairline.style.width = dur ? (cur / dur * 100) + '%' : '0%';
+
+  const anyPlaying = !song.paused || cur > 0;
+  qIdle.classList.toggle('in', !anyPlaying);
+  const idx = Math.floor((cur - LYRIC_START) / LYRIC_EVERY);
+  qEls.forEach((el, i) => {
+    const on = anyPlaying && i === idx && (cur - LYRIC_START) % LYRIC_EVERY < LYRIC_EVERY - 1.2;
+    el.classList.toggle('in', on || (anyPlaying && idx >= LYRICS.length && i === LYRICS.length - 1));
+  });
+
+  updateCountdowns();
+}, 200);
+
+/* ============ scenes & nav ============ */
+const navLeft = document.getElementById('navLeft');
+let scene = 'A';
+
+function showScene(id) {
+  scene = id;
+  document.querySelectorAll('.scene').forEach(s => s.classList.toggle('active', s.id === 'scene' + id));
+  if (id === 'A') { navLeft.textContent = 'make a wish'; navLeft.classList.remove('hidden'); }
+  if (id === 'B') { navLeft.textContent = 'back to the song'; navLeft.classList.remove('hidden'); }
+  if (id === 'C') { navLeft.textContent = 'back to the song'; navLeft.classList.remove('hidden'); }
+}
+
+navLeft.addEventListener('click', () => {
+  if (scene === 'A') showScene('B');
+  else showScene('A');
+});
+
+/* first play also nudges her toward the wish */
+let nudged = false;
+song.addEventListener('play', () => {
+  if (nudged) return;
+  nudged = true;
+});
+
+/* ---- scene B: candles ---- */
+let flamesLeft = 2;
+document.querySelectorAll('.numeral').forEach(el => {
+  el.addEventListener('click', () => extinguish(el));
+});
+function extinguish(el) {
+  if (el.classList.contains('out')) return;
+  el.classList.add('out');
+  flamesLeft--;
+  chime(392 + (2 - flamesLeft) * 130, 0.8, 0.04);
+  const r = el.getBoundingClientRect();
+  dustBurst(r.left + r.width / 2, r.top, 14, 1.6);
+  if (flamesLeft === 0) {
+    document.getElementById('wishNote').textContent = 'your wish is smoke now — it goes where the songs go';
+    setTimeout(() => showScene('C'), 2400);
+  }
+}
+document.getElementById('blowBtn').addEventListener('click', () => {
+  const lit = [...document.querySelectorAll('.numeral:not(.out)')];
+  lit.forEach((el, i) => setTimeout(() => extinguish(el), i * 500));
+});
+
+/* ============ countdown ============ */
+function nextBirthday() {
+  const now = new Date();
+  let target = new Date(now.getFullYear(), 11, 29, 0, 0, 0);
+  if (target <= now) target = new Date(now.getFullYear() + 1, 11, 29, 0, 0, 0);
+  return target;
+}
+const bday = nextBirthday();
+const pad = n => String(n).padStart(2, '0');
+
+function updateCountdowns() {
+  const diff = bday - new Date();
+  if (diff <= 0) {
+    document.querySelector('.cd-label').textContent = 'track twenty-four is playing now';
+    ['cdD','cdH','cdM','cdS'].forEach(id => document.getElementById(id).textContent = '00');
+    document.getElementById('miniCd').textContent = 'it\u2019s today.';
+    return;
+  }
+  const s = (diff / 1000) | 0;
+  const d = (s / 86400) | 0, h = ((s % 86400) / 3600) | 0, m = ((s % 3600) / 60) | 0;
+  document.getElementById('cdD').textContent = pad(d);
+  document.getElementById('cdH').textContent = pad(h);
+  document.getElementById('cdM').textContent = pad(m);
+  document.getElementById('cdS').textContent = pad(s % 60);
+  document.getElementById('miniCd').textContent = d + 'd ' + pad(h) + 'h ' + pad(m) + 'm until december 29';
+}
+updateCountdowns();
+
+/* soft dust on click, anywhere quiet */
+document.addEventListener('click', e => {
+  if (e.target.closest('button, .frame, .corner, .numeral')) return;
+  dustBurst(e.clientX, e.clientY, 14, 1.6);
+});
+</script>
+</body>
+</html>
